@@ -1,0 +1,127 @@
+#! /usr/bin/bash
+# change_background_color - Changes the background color.
+# change_background_color <color_step> <delay>
+# color step is the change of color between 0 and 1, it's floating numbers.
+# delay is the delay applied in seconds for the change of the color.
+# Both <color_step> and <delay> can be decimals.
+
+################################################################################
+#                              change_background_color                         #
+#                                                                              #
+# Change background color of desktop in Linux.                                 #
+#                                                                              #
+# Change History                                                               #
+# 11/17/2020  Emanoel Delfino    Original code. Script for changing desktop    #
+#                                background color.                             #
+# 12/02/2020  Emanoel Delfino    Check if no options are provided, then exit   #
+# 12/03/2020  Emanoel Delfino    Detect monitors                               #
+#                                                                              #
+#                                                                              #
+################################################################################
+################################################################################
+################################################################################
+#                                                                              #
+#  Copyright (C) 2020 Emanoel Delfino                                          #
+#                                                                              #
+# Permission is hereby granted, free of charge, to any person obtaining a copy #
+# of this software and associated documentation files (the "Software"), to deal#
+# in the Software without restriction, including without limitation the rights #
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell    #
+# copies of the Software, and to permit persons to whom the Software is        #
+# furnished to do so, subject to the following conditions:                     #
+#                                                                              #
+# The above copyright notice and this permission notice shall be included in   #
+# copies or substantial portions of the Software.                              #
+#                                                                              #
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR   #
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,     #
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE  #
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER       #
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,#
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE#
+# SOFTWARE.                                                                    #
+#                                                                              #
+################################################################################
+################################################################################
+################################################################################
+
+################################################################################
+# Help                                                                         #
+################################################################################
+Help()
+{
+	echo
+	echo "$0 <color_step> <delay>"
+	echo
+        echo "<color_step> is the change of color between 0 and 1."
+        echo "<delay> is the delay applied in seconds for change of background color."
+	echo
+	echo "OBS: Both arguments can be decimals."
+	echo
+}
+
+################################################################################
+################################################################################
+# Main program                                                                 #
+################################################################################
+################################################################################
+################################################################################
+# Process the input options. Add options as needed.                            #
+################################################################################
+# Get the options
+while getopts ":h" option; do
+	case $option in
+		h) # display help
+			Help
+			exit;;
+		\?) # incorrect option	
+			echo "Error: Invalid option"
+			echo "Try: $0 -help"	
+			exit;;
+	esac
+done
+
+# No options provided
+if [ $# -eq 0 ]; then
+        echo "No arguments provided. Try $0 -h"
+        exit 1
+fi
+
+monitors=$(xrandr | grep " connected " | awk '{ print$1 }')
+
+# trap ctrl-c and call ctrl_c()
+trap ctrl_c INT
+
+change_monitors_color() {
+	for monitor in ${monitors[@]}; do	
+		xfconf-query -c xfce4-desktop -p "/backdrop/screen0/monitor$monitor/workspace0/rgba1" -t double -t double -t double -t double -s $1 -s $2 -s $3 -s 1
+	done
+	sleep $4
+}
+
+function ctrl_c() {
+	change_monitors_color 0 0 0 2
+	
+	printf "\n\nDone, changed background color to black.\n"
+
+	exit
+}
+
+printf "\nStarting changing background colors..."
+printf "\nPress Ctrl+C to stop the script.\n\n"
+
+sleep 1.5
+
+nums=($(seq 0 $1 1))
+
+while true; do
+	for red in ${nums[@]}; do
+		for green in ${nums[@]}; do
+			for blue in ${nums[@]}; do
+				change_monitors_color $red $green $blue $2 
+				echo "Changed background color..."
+			done
+		done
+	done
+done	
+
