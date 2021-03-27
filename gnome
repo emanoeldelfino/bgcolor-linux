@@ -1,18 +1,37 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
+
+background_uri=$(gsettings get org.gnome.desktop.background picture-uri)
+background_color=$(gsettings get org.gnome.desktop.background primary-color)
 
 # trap ctrl-c and call ctrl_c()
 trap ctrl_c INT
 
 function ctrl_c() {
-	gsettings set org.gnome.desktop.background primary-color '#000000'
+    printf "\n\nDone, changed background "
 
-	printf "\n\nDone, changed background color to black.\n"
+    if [ $background_uri ]; then
+        gsettings set org.gnome.desktop.background picture-uri $background_uri
+        printf "to the image which was set" 
+    elif [ $background_color ]; then
+        gsettings set org.gnome.desktop.background primary-color $background_color
+        printf "color to the color which was set"
+    else
+        gsettings set org.gnome.desktop.background primary-color '#000000'
+        printf "color to black"
+    fi
+
+    printf ".\n"
 
 	exit # 0
 }
 
 printf "\nStarting changing background colors..."
-printf "\nPress Ctrl+C to stop the script.\n\n"
+printf "\nPress Ctrl+C to stop the script."
+
+if [ $background_uri ]; then
+    gsettings set org.gnome.desktop.background picture-uri ''
+    printf "\nBackground set to empty image (black color)\n\n"
+fi
 
 sleep 1.5 
 
